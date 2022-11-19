@@ -129,21 +129,27 @@ static void Vertex(double th,double ph)
 }
 
 static void ground(){
-   glPushMatrix();
 
    float white[] = {1,1,1,1};
    float Emission[]  = {0.0,0.0,0.01*emission,1.0};
    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,Emission);
-   glColor3f(1,1,1);
+
+   glPushMatrix();
+   glTranslated(0,0,0);
+   glRotated(th,0,0,0);
+   glScaled(100,1,100);
 
    //textures
    glEnable(GL_TEXTURE_2D);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
    glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
    glBindTexture(GL_TEXTURE_2D,texture[1]);
 
    glBegin(GL_QUADS);
+   glColor3f(1,1,1);
    glNormal3f( 0, 1, 0);
    glTexCoord2f(0,0);
    glVertex3f(-1,0, -1);
@@ -305,14 +311,14 @@ void display()
    Cx = Ex + Cos(th);
    Cy = Ey;
    Cz = Ez + Sin(th);
-   gluLookAt(Ex,Ey,Ez , Cx,Cy,Cz , 0,1,0);
+   //gluLookAt(Ex,Ey,Ez , Cx,Cy,Cz , 0,1,0);
 
    //  Flat or smooth shading
    glShadeModel(smooth ? GL_SMOOTH : GL_FLAT);
 
    //========================draw stuff==========================
-   cubeHelper(0,0,0,1,2,1,45,.8,.8,.8,texture[1],.3);
-
+   cubeHelper(0,0,0,1,2,1,45,.8,.8,.8,0,.3);
+   ground();
 
 
 
