@@ -15,6 +15,8 @@
 #define bk 10
 #define mk 11
 
+static void cubeHelper(double x,double y,double z, double dx,double dy,double dz, double th, double r, double g, double b, int tex, int shin);
+
 //global variables for projections and lighting
 int axes=1;       //  Display axes
 int mode=1;       //  Projection mode (dont change)
@@ -24,10 +26,10 @@ int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
 int obj=0;        //  Scene/opbject selection
 double asp=1;     //  Aspect ratio
-double dim=10;     //  Size of world
+double dim=1;     //  Size of world
 int light     =   1;  // Lighting
 int one       =   1;  // Unit value
-int distance  =   5;  // Light distance
+int distance  =   50;  // Light distance
 int inc       =  10;  // Ball increment
 int smooth    =   1;  // Smooth/Flat shading
 int local     =   0;  // Local Viewer Model
@@ -111,7 +113,7 @@ void keyInput(void){
    }
    th %= 360;
    ph %= 360;
-   Project(mode?fov:0,asp,dim);
+   Project(fov,asp,dim);
    glutIdleFunc(move?idle:NULL);
    //glutPostRedisplay();
 }
@@ -128,41 +130,8 @@ static void Vertex(double th,double ph)
    glVertex3d(x,y,z);
 }
 
-static void ground(){
+static void ufo(){
 
-   float white[] = {1,1,1,1};
-   float Emission[]  = {0.0,0.0,0.01*emission,1.0};
-   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,Emission);
-
-   glPushMatrix();
-   glTranslated(0,0,0);
-   glRotated(th,0,0,0);
-   glScaled(100,1,100);
-
-   //textures
-   glEnable(GL_TEXTURE_2D);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-   glBindTexture(GL_TEXTURE_2D,texture[1]);
-
-   glBegin(GL_QUADS);
-   glColor3f(1,1,1);
-   glNormal3f( 0, 1, 0);
-   glTexCoord2f(0,0);
-   glVertex3f(-1,0, -1);
-   glTexCoord2f(1,0);
-   glVertex3f(1,0, -1);
-   glTexCoord2f(1,1);
-   glVertex3f(1,0, 1);
-   glTexCoord2f(0,1);
-   glVertex3f(-1,0, 1);
-   glEnd();
-
-   glPopMatrix();
-   glDisable(GL_TEXTURE_2D);
 }
 
 //sun for the light source
@@ -295,6 +264,14 @@ static void cubeHelper(double x,double y,double z,
    glDisable(GL_TEXTURE_2D);
 }
 
+static void ground(){
+   cubeHelper(0,-0.1,0,10,0.1,10,0,.2,.2,.2,1,.3); //city
+   cubeHelper(0,-0.1,-20,10,0.1,10,0,.5,.3,.1,1,.3); //neighb
+   cubeHelper(-20,-0.1,-10,10,0.1,20,0,.5,.5,.5,1,.3); //forest
+   cubeHelper(20,-0.1,-10,10,.1,20,0,.5,.5,0,1,.3); //desert
+   cubeHelper(0,-0.1,20,30,.1,10,0,.3,.3,.3,1,.3); //mountains
+}
+
 //display func
 void display()
 {
@@ -311,13 +288,15 @@ void display()
    Cx = Ex + Cos(th);
    Cy = Ey;
    Cz = Ez + Sin(th);
-   //gluLookAt(Ex,Ey,Ez , Cx,Cy,Cz , 0,1,0);
+   gluLookAt(Ex,Ey,Ez , Cx,Cy,Cz , 0,1,0);
 
    //  Flat or smooth shading
    glShadeModel(smooth ? GL_SMOOTH : GL_FLAT);
 
    //========================draw stuff==========================
    cubeHelper(0,0,0,1,2,1,45,.8,.8,.8,0,.3);
+   cubeHelper(2,0,2,1,2,1,45,.8,.8,.8,0,.3);
+   cubeHelper(25,0,-25,1,2,1,45,.8,.8,.8,0,.3);
    ground();
 
 
@@ -330,10 +309,10 @@ void display()
       float Diffuse[]   = {0.01*diffuse ,0.01*diffuse ,0.01*diffuse ,1.0};
       float Specular[]  = {0.01*specular,0.01*specular,0.01*specular,1.0};
       //  Light position
-      float Position[]  = {distance*Cos(zh),ylight,distance*Sin(zh),1.0};
+      float Position[]  = {ylight,distance*Cos(zh),distance*Sin(zh),1.0};
       //  Draw light position as ball (still no lighting here)
       glColor3f(1,1,1);
-      sun(Position[0],Position[1],Position[2] , 0.1);
+      sun(Position[0],Position[1],Position[2] , 1);
       //  OpenGL should normalize normal vectors
       glEnable(GL_NORMALIZE);
       //  Enable lighting
@@ -359,23 +338,13 @@ void display()
    //Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s Light=%s",
    //  th,ph,dim,fov,mode?"Perpective":"Orthogonal",light?"On":"Off");
    glWindowPos2i(5,5);
-   Print("%d",numFrames);
+   Print("%d %.3f %.3f %.3f %.3f",numFrames, Ex, Ey, Ez, th);
    //  Render the scene and make it visible
    ErrCheck("display");
    glFlush();
    glutSwapBuffers();
 
    keyInput();
-}
-
-//do stuff when special key is pressed
-void special(int key,int x,int y)
-{
-
-}
-
-void specialUp(int key, int x, int y){
-   
 }
 
 //do stuff when key is pressed
@@ -474,7 +443,7 @@ void menuChecker(int button){
          break;
       case 2:
          if(fullScreenMode) {
-            glutReshapeWindow(1500,900);
+            glutReshapeWindow(1200,700);
             fullScreenMode = 0;
          }
          else {
@@ -595,8 +564,6 @@ int main(int argc,char* argv[])
    glutDisplayFunc(display);
    glutReshapeFunc(reshape);
    timer(0);
-   glutSpecialFunc(special);
-   glutSpecialUpFunc(specialUp);
    glutKeyboardFunc(key);
    glutKeyboardUpFunc(keyUp);
    glutIdleFunc(idle);
