@@ -18,4 +18,4 @@ O: switch between object views
 
 
 Time to complete:
--Total: 3 hours
+30-40 hours
